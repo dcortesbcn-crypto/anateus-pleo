@@ -47,6 +47,13 @@ transaction will be in need and for it we should implement one of the next solut
 - TC/C 
 - Saga 
 
+
+## Some annotations
+
+- In a project done by me some of the decisions that I will have taken differently will be:
+  - Use a more functional approach for errors that will help avoid nulls on the repository layer (Arrow for kotlin with Either)
+  - Use a hexagonal approach
+
 ## System Design For a real and Scalable Solution
 
 The first step composed by the job launched by a crontab will send the tasks to the queue system (for each provider a specific queue)
@@ -74,7 +81,6 @@ The next flow will be in case a payment provider had not an async method so its 
    - more updated documentation
    - performance improvements
    - security and bug fixes
- - [Optional] Change current architecture to an hexagonal architecture(port/adapters)
  - [Optional] Set sonar coverage tool
  - Add unit tests to current architecture already developed
  - Develop the use case proposed in iterative steps :
