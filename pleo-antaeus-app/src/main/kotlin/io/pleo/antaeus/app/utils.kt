@@ -1,6 +1,7 @@
 
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.data.AntaeusDal
+import io.pleo.antaeus.core.ports.CustomerRepository
+import io.pleo.antaeus.core.ports.InvoiceRepository
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
@@ -9,16 +10,16 @@ import java.math.BigDecimal
 import kotlin.random.Random
 
 // This will create all schemas and setup initial data
-internal fun setupInitialData(dal: AntaeusDal) {
+internal fun setupInitialData(customerRepository: CustomerRepository, invoiceRepository: InvoiceRepository) {
     val customers = (1..100).mapNotNull {
-        dal.createCustomer(
+        customerRepository.createCustomer(
             currency = Currency.values()[Random.nextInt(0, Currency.values().size)]
         )
     }
-
+    // TODO change this status for an update invoice with status = PAID
     customers.forEach { customer ->
         (1..10).forEach {
-            dal.createInvoice(
+            invoiceRepository.createInvoice(
                 amount = Money(
                     value = BigDecimal(Random.nextDouble(10.0, 500.0)),
                     currency = customer.currency
