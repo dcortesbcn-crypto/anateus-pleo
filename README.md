@@ -1,98 +1,86 @@
-> :warning: This repository was archived automatically since no ownership was defined :warning:
->
-> For details on how to claim stewardship of this repository see:
->
-> [How to configure a service in OpsLevel](https://www.notion.so/pleo/How-to-configure-a-service-in-OpsLevel-f6483fcb4fdd4dcc9fc32b7dfe14c262)
->
-> To learn more about the automatic process for stewardship which archived this repository see:
->
-> [Automatic process for stewardship](https://www.notion.so/pleo/Automatic-process-for-stewardship-43d9def9bc9a4010aba27144ef31e0f2)
+# Recurrent Invoice Payment Service
 
-## Antaeus
+This projects holds or the mandatory pieces to realize a basic recurrent invoice payment process 
+that is realized at the start of each month.
 
-Antaeus (/ænˈtiːəs/), in Greek mythology, a giant of Libya, the son of the sea god Poseidon and the Earth goddess Gaia. He compelled all strangers who were passing through the country to wrestle with him. Whenever Antaeus touched the Earth (his mother), his strength was renewed, so that even if thrown to the ground, he was invincible. Heracles, in combat with him, discovered the source of his strength and, lifting him up from Earth, crushed him to death.
+## Ubiquitous Language
 
-Welcome to our challenge.
+- Payment Provider: gateway between consumer and provider that allows multiple payment methods.
+can be limited in some countries
+ - have transactions fees
+ - have change of currencies fees [Out of current problem]
+ - have credit card fees
+- Payment methods: ways to pay for a given resource, the most popular can be
+  - card (Visa, MasterCard)
+  - Digital Wallet
+  - Paypal
+  - Bank Transfer
+- Invoice: A payment request
+- Customer: Specific consumer using our services that pays a recurrent invoice
 
-## The challenge
 
-As most "Software as a Service" (SaaS) companies, Pleo needs to charge a subscription fee every month. Our database contains a few invoices for the different markets in which we operate. Your task is to build the logic that will schedule payment of those invoices on the first of the month. While this may seem simple, there is space for some decisions to be taken and you will be expected to justify them.
+## Some Assumptions
 
-## Instructions
+We don't have to focus on the complexity of the Payment Provider, even when a real
+payment provider usually has an asynchronous way to respond for example
+webhooks or you have to ask them recurrently the status of your transaction.
 
-Fork this repo with your solution. Ideally, we'd like to see your progression through commits, and don't forget to update the README.md to explain your thought process.
+We will assume that the customer has already configured correctly a valid payment provider for his region
+and we have a provider key that relates this customer with the provider where all the
+payment information is stored (if it was via credit card the number, expiration date, CVV...)
 
-Please let us know how long the challenge takes you. We're not looking for how speedy or lengthy you are. It's just really to give us a clearer idea of what you've produced in the time you decided to take. Feel free to go as big or as small as you want.
+As in fact defined on the Payment Provider interface we would only allow transactions 
+that has the same currency that found on the bank account, as realize currency conversion
+it can be really difficult as the relation of currencies can change really fast
 
-## Developing
+Our current system is a little one with few customers so we can contain all the 
+steps on a single process [TODO show here basic diagram]
 
-Requirements:
-- \>= Java 11 environment
+For next iterations about how to scalate the current application on the next section 
+we show some system design that could help evolve it.
 
-Open the project using your favorite text editor. If you are using IntelliJ, you can open the `build.gradle.kts` file and it is gonna setup the project in the IDE for you.
+In all our designs we will guess that we use the same transactional DB for both
+Customers and Invoices so we can just delegate the consistency of our state to 
+a transaction, in more complex system we probably would have different DBs so a distributed 
+transaction will be in need and for it we should implement one of the next solutions:
+- Two phase commit
+- TC/C 
+- Saga 
 
-### Building
+## System Design For a real and Scalable Solution
 
-```
-./gradlew build
-```
+[TO SET]
 
-### Running
+## Steps to realize
+ - Fix minor errors to launch docker process in local
+ - New Readme with the proposal and next steps
+   - Diagrams of possible System Designs
+ - Update versions of dependencies (languages & frameworks) to the following:
+   - more updated documentation
+   - performance improvements
+   - security and bug fixes
+ - [Optional] Change current architecture to an hexagonal architecture(port/adapters)
+ - [Optional] Set sonar coverage tool
+ - Add unit tests to current architecture already developed
+ - Develop the use case proposed in iterative steps :
+   - Billing Service would handle the logic on a job that will be launched by a cron
+     - Create docker file to launch Cron
+     - Create simple job that reads all customers alive.
+     - Update the job to create an invoiceRequestTask
+     - Update the job to send the new invoiceRequestTask to a queue system
+     - Create a process (worker) that read the task
+     - Update the process to create a pending invoice
+       - Customer currency
+       - Amount to pay --> We will assume that the amount is static for each currency.
+       - Invoice month (month/year)
+       - Status --> Pending
+     - Update the process to send to the queue again the invoiceRequestTask if an error adding the invoice
+     - Send the invoice to the payment provider service
+     - For expected true response we update the invoice status to PAID
+       - if any error we send to a specific queue to deal with invoices 
+         to be set as paid
+     - If error on Payment Provider
+        - if we can retry it (Network Exception) send to queue again with retry -1
+        - if customer was not found update customer status to say bad configuration on payment provider
+        - if currency not match update customer status with error to say to them that problem with currency
 
-There are 2 options for running Anteus. You either need libsqlite3 or docker. Docker is easier but requires some docker knowledge. We do recommend docker though.
-
-*Running Natively*
-
-Native java with sqlite (requires libsqlite3):
-
-If you use homebrew on MacOS `brew install sqlite`.
-
-```
-./gradlew run
-```
-
-*Running through docker*
-
-Install docker for your platform
-
-```
-docker build -t antaeus
-docker run antaeus
-```
-
-### App Structure
-The code given is structured as follows. Feel free however to modify the structure to fit your needs.
-```
-├── buildSrc
-|  | gradle build scripts and project wide dependency declarations
-|  └ src/main/kotlin/utils.kt 
-|      Dependencies
-|
-├── pleo-antaeus-app
-|       main() & initialization
-|
-├── pleo-antaeus-core
-|       This is probably where you will introduce most of your new code.
-|       Pay attention to the PaymentProvider and BillingService class.
-|
-├── pleo-antaeus-data
-|       Module interfacing with the database. Contains the database 
-|       models, mappings and access layer.
-|
-├── pleo-antaeus-models
-|       Definition of the Internal and API models used throughout the
-|       application.
-|
-└── pleo-antaeus-rest
-        Entry point for HTTP REST API. This is where the routes are defined.
-```
-
-### Main Libraries and dependencies
-* [Exposed](https://github.com/JetBrains/Exposed) - DSL for type-safe SQL
-* [Javalin](https://javalin.io/) - Simple web framework (for REST)
-* [kotlin-logging](https://github.com/MicroUtils/kotlin-logging) - Simple logging framework for Kotlin
-* [JUnit 5](https://junit.org/junit5/) - Testing framework
-* [Mockk](https://mockk.io/) - Mocking library
-* [Sqlite3](https://sqlite.org/index.html) - Database storage engine
-
-Happy hacking 😁!
