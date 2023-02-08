@@ -49,7 +49,22 @@ transaction will be in need and for it we should implement one of the next solut
 
 ## System Design For a real and Scalable Solution
 
-[TO SET]
+The first step composed by the job launched by a crontab will send the tasks to the queue system (for each provider a specific queue)
+and then each worker will read from the specific queue to end up having a pending invoice and the invoice send to the specific payment 
+provider.
+
+If we receive at any stage an error that can be handled we send again the task to the queue with a lower retry, if we are not able to 
+end up the transaction after all retries or because an unknown or unhandled error we send it to a dead letter tasks to be checked manually
+
+![image](./resources/images/Invoice_Jobs_Workflow.jpg)
+
+This flow will be in case that the payment provider offers an async solution like webhooks
+
+![image](./resources/images/Invoice_Update_status_flow_async.jpg)
+
+The next flow will be in case a payment provider had not an async method so its our processes who should ask if the transaction has end it
+
+![image](./resources/images/Invoice_Update_status_flow_sync.jpg)
 
 ## Steps to realize
  - Fix minor errors to launch docker process in local
