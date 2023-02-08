@@ -1,15 +1,15 @@
 # Recurrent Invoice Payment Service
 
-This projects holds or the mandatory pieces to realize a basic recurrent invoice payment process 
+This projects holds the mandatory pieces to realize a basic recurrent invoice payment process 
 that is realized at the start of each month.
 
 ## Ubiquitous Language
 
 - Payment Provider: gateway between consumer and provider that allows multiple payment methods.
 can be limited in some countries
- - have transactions fees
- - have change of currencies fees [Out of current problem]
- - have credit card fees
+  - have transactions fees
+  - have change of currencies fees [Out of current problem]
+  - have credit card fees
 - Payment methods: ways to pay for a given resource, the most popular can be
   - card (Visa, MasterCard)
   - Digital Wallet
@@ -23,9 +23,9 @@ can be limited in some countries
 
 We don't have to focus on the complexity of the Payment Provider, even when a real
 payment provider usually has an asynchronous way to respond for example
-webhooks or you have to ask them recurrently the status of your transaction.
+webhooks, or you have to ask them recurrently the status of your transaction.
 
-We will assume that the customer has already configured correctly a valid payment provider for his region
+We will assume that the customer has already configured correctly a valid payment provider for his region,
 and we have a provider key that relates this customer with the provider where all the
 payment information is stored (if it was via credit card the number, expiration date, CVV...)
 
@@ -33,7 +33,7 @@ As in fact defined on the Payment Provider interface we would only allow transac
 that has the same currency that found on the bank account, as realize currency conversion
 it can be really difficult as the relation of currencies can change really fast
 
-Our current system is a little one with few customers so we can contain all the 
+Our current system is a little one with few customers, so we can contain all the 
 steps on a single process [TODO show here basic diagram]
 
 For next iterations about how to scalate the current application on the next section 
