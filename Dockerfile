@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:latest
+FROM eclipse-temurin:17
 
 RUN apt-get update && \
     apt-get install -y sqlite3
