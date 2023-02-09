@@ -4,10 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Currency.EUR
 import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
+import io.pleo.antaeus.models.InvoiceStatus.PAID
 import io.pleo.antaeus.models.InvoiceStatus.PENDING
 import io.pleo.antaeus.models.Money
 import org.junit.jupiter.api.Test
@@ -35,11 +34,12 @@ internal class BillingServiceTest {
     }
 
     @Test
-    fun `given pending invoices a charge to a provider is requested`() {
+    fun `given pending invoices and charge to a provider is succeed we should update invoice status`() {
         // Given
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
         every { paymentProvider.charge(invoice) } returns true
+        every { invoiceService.updateStatus(12, PAID) } returns invoice.copy(status = PAID)
 
         // When
         service.chargeSubscription()
@@ -47,6 +47,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PAID) }
     }
 
 }
