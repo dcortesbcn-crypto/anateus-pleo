@@ -9,6 +9,10 @@ class InvoiceService(private val invoiceRepository: InvoiceRepository) {
         return invoiceRepository.fetchInvoices()
     }
 
+    fun fetchPendingInvoices(): List<Invoice> {
+        return invoiceRepository.fetchPendingInvoices()
+    }
+
     fun fetch(id: Int): Invoice {
         return invoiceRepository.fetchInvoice(id) ?: throw InvoiceNotFoundException(id)
     }
