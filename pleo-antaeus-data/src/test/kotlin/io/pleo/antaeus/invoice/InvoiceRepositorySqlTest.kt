@@ -59,4 +59,24 @@ internal class InvoiceRepositorySqlTest{
             assert(repositorySql.fetchPendingInvoices() == listOf(invoice))
         }
     }
+
+    @Nested
+    inner class UpdateInvoicesTest{
+
+        @Test
+        fun `given any pending invoice found on the system should return a null`(){
+
+            // When - Then
+            assert(repositorySql.updateStatusInvoice(1, PAID) == null)
+        }
+
+        @Test
+        fun `given invoice pending found on the system should return the invoice`(){
+            // Given
+            val invoice = repositorySql.createInvoice(Money(BigDecimal(24), EUR), Customer(1, EUR), PENDING)
+
+            // When - Then
+            assert(repositorySql.updateStatusInvoice(invoice!!.id, PAID) == invoice.copy(status = PAID))
+        }
+    }
 }

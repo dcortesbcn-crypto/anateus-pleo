@@ -27,7 +27,7 @@ class InvoiceRepositorySql(private val db: Database) : InvoiceRepository {
     override fun fetchPendingInvoices(): List<Invoice> {
         return transaction(db) {
             InvoiceTable
-                .select{ InvoiceTable.status.eq(InvoiceStatus.PENDING.toString()) }
+                .select { InvoiceTable.status.eq(InvoiceStatus.PENDING.toString()) }
                 .map { it.toInvoice() }
         }
     }
@@ -41,6 +41,15 @@ class InvoiceRepositorySql(private val db: Database) : InvoiceRepository {
                     it[this.status] = status.toString()
                     it[this.customerId] = customer.id
                 } get InvoiceTable.id
+        }
+
+        return fetchInvoice(id)
+    }
+
+    override fun updateStatusInvoice(invoiceId: Int, status: InvoiceStatus): Invoice? {
+        val id = transaction(db) {
+            InvoiceTable
+                .update({ InvoiceTable.id eq invoiceId }) { it[this.status] = status.toString() }
         }
 
         return fetchInvoice(id)
