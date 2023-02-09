@@ -9,6 +9,6 @@ class BillingService(
 
     fun chargeSubscription() {
         invoiceService.fetchPendingInvoices()
-            .forEach { TODO() }
+            .forEach { paymentProvider.charge(it) }
     }
 }
