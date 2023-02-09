@@ -10,5 +10,6 @@ interface InvoiceRepository {
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus): Invoice?
     fun fetchInvoice(id: Int): Invoice?
     fun fetchInvoices(): List<Invoice>
+    fun fetchPendingInvoices(): List<Invoice>
 
 }

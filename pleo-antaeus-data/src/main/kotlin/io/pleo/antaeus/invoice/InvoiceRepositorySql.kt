@@ -24,6 +24,14 @@ class InvoiceRepositorySql(private val db: Database) : InvoiceRepository {
         }
     }
 
+    override fun fetchPendingInvoices(): List<Invoice> {
+        return transaction(db) {
+            InvoiceTable
+                .select{ InvoiceTable.status.eq(InvoiceStatus.PENDING.toString()) }
+                .map { it.toInvoice() }
+        }
+    }
+
     override fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus): Invoice? {
         val id = transaction(db) {
             InvoiceTable
