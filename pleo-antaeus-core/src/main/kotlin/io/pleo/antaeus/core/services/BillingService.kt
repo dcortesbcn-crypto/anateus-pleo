@@ -9,16 +9,16 @@ class BillingService(
     private val invoiceService: InvoiceService
 ) {
 
-    private fun chargeInvoice(invoice: Invoice) {
-        val hasSucceed = paymentProvider.charge(invoice)
+    private fun chargeSubscriptionFrom(invoice: Invoice) =
+        paymentProvider.charge(invoice)
+            .let {
+                if (it) {
+                    invoiceService.updateStatus(invoice.id, PAID)
+                }
+            }
 
-        if (hasSucceed) {
-            invoiceService.updateStatus(invoice.id, PAID)
-        }
-    }
-
-    fun chargeSubscription() {
+    fun chargeSubscriptions() {
         invoiceService.fetchPendingInvoices()
-            .forEach { chargeInvoice(it) }
+            .forEach { chargeSubscriptionFrom(it) }
     }
 }

@@ -25,7 +25,7 @@ internal class BillingServiceTest {
         every { invoiceService.fetchPendingInvoices() } returns emptyList()
 
         // When
-        service.chargeSubscription()
+        service.chargeSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -42,7 +42,7 @@ internal class BillingServiceTest {
         every { invoiceService.updateStatus(12, PAID) } returns invoice.copy(status = PAID)
 
         // When
-        service.chargeSubscription()
+        service.chargeSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
