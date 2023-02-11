@@ -1,6 +1,8 @@
 
+import io.pleo.antaeus.core.events.InvoiceEvent
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.ports.CustomerRepository
+import io.pleo.antaeus.core.ports.InvoiceEventSender
 import io.pleo.antaeus.core.ports.InvoiceRepository
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
@@ -36,6 +38,14 @@ internal fun getPaymentProvider(): PaymentProvider {
     return object : PaymentProvider {
         override fun charge(invoice: Invoice): Boolean {
                 return Random.nextBoolean()
+        }
+    }
+}
+
+internal fun getInvoiceEventSender(): InvoiceEventSender {
+    return object : InvoiceEventSender {
+        override fun send(event: InvoiceEvent) {
+            // Here we should implement our event handler
         }
     }
 }

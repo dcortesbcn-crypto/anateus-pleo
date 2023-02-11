@@ -3,10 +3,15 @@ package io.pleo.antaeus.core.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.pleo.antaeus.core.events.CurrencyMismatch
+import io.pleo.antaeus.core.events.CustomerNotFoundOnPaymentProvider
+import io.pleo.antaeus.core.events.InvoicePayed
+import io.pleo.antaeus.core.events.NoBalanceToPay
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
+import io.pleo.antaeus.core.ports.InvoiceEventSender
 import io.pleo.antaeus.models.Currency.EUR
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus.*
@@ -18,8 +23,9 @@ internal class BillingServiceTest {
 
     private val paymentProvider = mockk<PaymentProvider>()
     private val invoiceService = mockk<InvoiceService>()
+    private val invoiceEventSender = mockk<InvoiceEventSender>()
 
-    private val service = BillingService(paymentProvider, invoiceService)
+    private val service = BillingService(paymentProvider, invoiceService, invoiceEventSender)
 
     @Test
     fun `given no pending invoices no billing is requested`() {
@@ -32,6 +38,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 0) { paymentProvider.charge(any()) }
+        verify(exactly = 0) { invoiceEventSender.send(any()) }
 
     }
 
@@ -43,6 +50,7 @@ internal class BillingServiceTest {
         every { paymentProvider.charge(invoice) } returns true
         every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, PAID) } returns invoice.copy(status = PAID)
+        every { invoiceEventSender.send(InvoicePayed(15)) } returns Unit
 
         // When
         service.chargeSubscriptions()
@@ -52,6 +60,7 @@ internal class BillingServiceTest {
         verify(exactly = 1) { paymentProvider.charge(invoice) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PAID) }
+        verify(exactly = 1) { invoiceEventSender.send(InvoicePayed(15)) }
     }
 
     @Test
@@ -62,6 +71,7 @@ internal class BillingServiceTest {
         every { paymentProvider.charge(invoice) } returns false
         every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, NO_BALANCE) } returns invoice.copy(status = NO_BALANCE)
+        every { invoiceEventSender.send(NoBalanceToPay(15)) } returns Unit
 
         // When
         service.chargeSubscriptions()
@@ -71,6 +81,7 @@ internal class BillingServiceTest {
         verify(exactly = 1) { paymentProvider.charge(invoice) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, NO_BALANCE) }
+        verify(exactly = 1) { invoiceEventSender.send(NoBalanceToPay(15)) }
     }
 
     @Test
@@ -81,6 +92,7 @@ internal class BillingServiceTest {
         every { paymentProvider.charge(invoice) } throws  CustomerNotFoundException(15)
         every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, CUSTOMER_NOT_ON_PROVIDER) } returns invoice.copy(status = CUSTOMER_NOT_ON_PROVIDER)
+        every { invoiceEventSender.send(CustomerNotFoundOnPaymentProvider(15)) } returns Unit
 
         // When
         service.chargeSubscriptions()
@@ -90,6 +102,7 @@ internal class BillingServiceTest {
         verify(exactly = 1) { paymentProvider.charge(invoice) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, CUSTOMER_NOT_ON_PROVIDER) }
+        verify(exactly = 1) { invoiceEventSender.send(CustomerNotFoundOnPaymentProvider(15)) }
     }
 
     @Test
@@ -100,6 +113,7 @@ internal class BillingServiceTest {
         every { paymentProvider.charge(invoice) } throws  CurrencyMismatchException(12, 15)
         every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, CURRENCY_MISMATCH) } returns invoice.copy(status = CURRENCY_MISMATCH)
+        every { invoiceEventSender.send(CurrencyMismatch(15)) } returns Unit
 
         // When
         service.chargeSubscriptions()
@@ -109,6 +123,7 @@ internal class BillingServiceTest {
         verify(exactly = 1) { paymentProvider.charge(invoice) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, CURRENCY_MISMATCH) }
+        verify(exactly = 1) { invoiceEventSender.send(CurrencyMismatch(15)) }
     }
 
     @Test

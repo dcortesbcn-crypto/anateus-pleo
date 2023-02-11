@@ -7,6 +7,7 @@
 
 package io.pleo.antaeus.app
 
+import getInvoiceEventSender
 import getPaymentProvider
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
@@ -15,7 +16,6 @@ import io.pleo.antaeus.customer.*
 import io.pleo.antaeus.invoice.InvoiceRepositorySql
 import io.pleo.antaeus.invoice.InvoiceTable
 import io.pleo.antaeus.rest.AntaeusRest
-import mu.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -58,12 +58,18 @@ fun main() {
     // Get third parties
     val paymentProvider = getPaymentProvider()
 
+    val invoiceEventSender = getInvoiceEventSender()
+
     // Create core services
     val invoiceService = InvoiceService(invoiceRepository)
     val customerService = CustomerService(customerRepository)
 
     // This is _your_ billing service to be included where you see fit
-    val billingService = BillingService(paymentProvider = paymentProvider, invoiceService=invoiceService)
+    val billingService = BillingService(
+        paymentProvider = paymentProvider,
+        invoiceService=invoiceService,
+        invoiceEventsSender = invoiceEventSender
+    )
 
     billingService.chargeSubscriptions()
     // Create REST web service
