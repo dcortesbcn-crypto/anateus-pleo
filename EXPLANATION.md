@@ -16,7 +16,9 @@ Welcome to our challenge.
 
 ## The challenge
 
-As most "Software as a Service" (SaaS) companies, Pleo needs to charge a subscription fee every month. Our database contains a few invoices for the different markets in which we operate. Your task is to build the logic that will schedule payment of those invoices on the first of the month. While this may seem simple, there is space for some decisions to be taken and you will be expected to justify them.
+As most "Software as a Service" (SaaS) companies, Pleo needs to charge a subscription fee every month. Our database contains a few 
+invoices for the different markets in which we operate. Your task is to build the logic that will schedule payment of those invoices on the 
+first of the month. While this may seem simple, there is space for some decisions to be taken and you will be expected to justify them.
 
 ## Instructions
 

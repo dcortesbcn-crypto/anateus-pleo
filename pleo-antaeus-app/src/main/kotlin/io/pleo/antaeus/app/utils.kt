@@ -16,7 +16,7 @@ internal fun setupInitialData(customerRepository: CustomerRepository, invoiceRep
             currency = Currency.values()[Random.nextInt(0, Currency.values().size)]
         )
     }
-    // TODO change this status for an update invoice with status = PAID
+
     customers.forEach { customer ->
         (1..10).forEach {
             invoiceRepository.createInvoice(
