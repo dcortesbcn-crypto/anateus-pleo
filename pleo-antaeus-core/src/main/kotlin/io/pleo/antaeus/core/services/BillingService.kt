@@ -3,7 +3,6 @@ package io.pleo.antaeus.core.services
 import io.pleo.antaeus.core.events.*
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
-import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.ports.InvoiceEventSender
@@ -19,40 +18,41 @@ class BillingService(
     private val invoiceService: InvoiceService,
     private val invoiceEventsSender: InvoiceEventSender
 ) {
-
-    private fun getStatusFromCharge(hasSucceed: Boolean): InvoiceStatus = if (hasSucceed) {
-        PAID
-    } else {
-        NO_BALANCE
-    }
-
-    private fun getEventFromCharge(hasSucceed: Boolean, customerId: Int): InvoiceEvent = if (hasSucceed) {
-        InvoicePayed(customerId)
-    } else {
-        NoBalanceToPay(customerId)
+    fun chargeSubscriptions() {
+        invoiceService.fetchPendingInvoices()
+            .forEach { chargeSubscriptionFrom(it) }
     }
 
     private fun chargeSubscriptionFrom(invoice: Invoice) = try {
         invoiceService.updateStatus(invoice.id, PROCESSING)
-        paymentProvider.charge(invoice)
-            .let {
-                invoiceService.updateStatus(invoice.id, getStatusFromCharge(it))
-                invoiceEventsSender.send(getEventFromCharge(it, invoice.customerId))
-            }
-    } catch (e: CustomerNotFoundException) {
-        invoiceService.updateStatus(invoice.id, CUSTOMER_NOT_ON_PROVIDER)
-        invoiceEventsSender.send(CustomerNotFoundOnPaymentProvider(invoice.customerId))
-    } catch (e: CurrencyMismatchException) {
-        invoiceService.updateStatus(invoice.id, CURRENCY_MISMATCH)
-        invoiceEventsSender.send(CurrencyMismatch(invoice.customerId))
-    } catch (e: NetworkException) {
-        logger.error { "Unable to connect to provider for invoice ${invoice.id}" }
+        val hasSucceed = paymentProvider.charge(invoice)
+        updateStatus(invoice.id, invoice.customerId, getStatusFromCharge(hasSucceed))
     } catch (e: Exception) {
-        logger.error { "Unknown exception for ${invoice.id}" }
+        dealWithError(e, invoice)
     }
 
-    fun chargeSubscriptions() {
-        invoiceService.fetchPendingInvoices()
-            .forEach { chargeSubscriptionFrom(it) }
+    private fun getStatusFromCharge(hasSucceed: Boolean): InvoiceStatus = when {
+        hasSucceed -> PAID
+        else -> NO_BALANCE
+    }
+
+    private fun updateStatus(invoiceId: Int, customerId: Int, status: InvoiceStatus) {
+        invoiceService.updateStatus(invoiceId, status)
+        invoiceEventsSender.send(statusToEvent(status, customerId))
+    }
+
+    private fun statusToEvent(status: InvoiceStatus, customerId: Int): InvoiceEvent = when (status) {
+        PAID -> InvoicePayed(customerId)
+        CUSTOMER_NOT_ON_PROVIDER -> CustomerNotFoundOnPaymentProvider(customerId)
+        CURRENCY_MISMATCH -> CurrencyMismatch(customerId)
+        NO_BALANCE -> NoBalanceToPay(customerId)
+        else -> throw IllegalStateException()
+    }
+
+    private fun dealWithError(exception: Exception, invoice: Invoice): Unit = when (exception) {
+        is CustomerNotFoundException -> updateStatus(invoice.id, invoice.customerId, CUSTOMER_NOT_ON_PROVIDER)
+        is CurrencyMismatchException -> updateStatus(invoice.id, invoice.customerId, CURRENCY_MISMATCH)
+        is NetworkException -> logger.error { "Unable to connect to provider for invoice ${invoice.id}" }
+        else -> logger.error { "Unknown exception for ${invoice.id}" }
     }
 }
