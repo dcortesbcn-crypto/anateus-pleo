@@ -23,6 +23,7 @@ class BillingService(
     }
 
     private fun chargeSubscriptionFrom(invoice: Invoice) = try {
+        invoiceService.updateStatus(invoice.id, PROCESSING)
         paymentProvider.charge(invoice)
             .let {
                 invoiceService.updateStatus(invoice.id, getStatusFromCharge(it))

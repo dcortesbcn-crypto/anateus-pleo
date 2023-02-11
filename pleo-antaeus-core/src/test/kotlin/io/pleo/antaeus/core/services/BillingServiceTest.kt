@@ -41,6 +41,7 @@ internal class BillingServiceTest {
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
         every { paymentProvider.charge(invoice) } returns true
+        every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, PAID) } returns invoice.copy(status = PAID)
 
         // When
@@ -49,6 +50,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, PAID) }
     }
 
@@ -58,6 +60,7 @@ internal class BillingServiceTest {
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
         every { paymentProvider.charge(invoice) } returns false
+        every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, NO_BALANCE) } returns invoice.copy(status = NO_BALANCE)
 
         // When
@@ -66,6 +69,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, NO_BALANCE) }
     }
 
@@ -75,6 +79,7 @@ internal class BillingServiceTest {
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
         every { paymentProvider.charge(invoice) } throws  CustomerNotFoundException(15)
+        every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, CUSTOMER_NOT_ON_PROVIDER) } returns invoice.copy(status = CUSTOMER_NOT_ON_PROVIDER)
 
         // When
@@ -83,6 +88,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, CUSTOMER_NOT_ON_PROVIDER) }
     }
 
@@ -92,6 +98,7 @@ internal class BillingServiceTest {
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
         every { paymentProvider.charge(invoice) } throws  CurrencyMismatchException(12, 15)
+        every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { invoiceService.updateStatus(12, CURRENCY_MISMATCH) } returns invoice.copy(status = CURRENCY_MISMATCH)
 
         // When
@@ -100,6 +107,7 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
         verify(exactly = 1) { invoiceService.updateStatus(12, CURRENCY_MISMATCH) }
     }
 
@@ -108,6 +116,7 @@ internal class BillingServiceTest {
         // Given
         val invoice = Invoice(12, 15, Money(BigDecimal(345.2), EUR), PENDING)
         every { invoiceService.fetchPendingInvoices() } returns listOf(invoice)
+        every { invoiceService.updateStatus(12, PROCESSING) } returns invoice.copy(status = PROCESSING)
         every { paymentProvider.charge(invoice) } throws  NetworkException()
 
         // When
@@ -116,7 +125,8 @@ internal class BillingServiceTest {
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
         verify(exactly = 1) { paymentProvider.charge(invoice) }
-        verify(exactly = 0) { invoiceService.updateStatus(any(), any()) }
+        verify(exactly = 1) { invoiceService.updateStatus(12, PROCESSING) }
+        verify(exactly = 1) { invoiceService.updateStatus(any(), any()) }
     }
 
 }
