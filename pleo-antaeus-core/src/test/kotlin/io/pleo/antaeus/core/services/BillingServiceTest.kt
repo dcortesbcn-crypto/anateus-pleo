@@ -33,7 +33,7 @@ internal class BillingServiceTest {
         every { invoiceService.fetchPendingInvoices() } returns emptyList()
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -53,7 +53,7 @@ internal class BillingServiceTest {
         every { invoiceEventSender.send(InvoicePayed(15)) } returns Unit
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -74,7 +74,7 @@ internal class BillingServiceTest {
         every { invoiceEventSender.send(NoBalanceToPay(15)) } returns Unit
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -95,7 +95,7 @@ internal class BillingServiceTest {
         every { invoiceEventSender.send(CustomerNotFoundOnPaymentProvider(15)) } returns Unit
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -116,7 +116,7 @@ internal class BillingServiceTest {
         every { invoiceEventSender.send(CurrencyMismatch(15)) } returns Unit
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }
@@ -135,7 +135,7 @@ internal class BillingServiceTest {
         every { paymentProvider.charge(invoice) } throws  NetworkException()
 
         // When
-        service.chargeSubscriptions()
+        service.chargePendingSubscriptions()
 
         // Then
         verify(exactly = 1) { invoiceService.fetchPendingInvoices() }

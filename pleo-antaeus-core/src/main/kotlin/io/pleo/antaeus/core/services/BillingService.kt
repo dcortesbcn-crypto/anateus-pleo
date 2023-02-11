@@ -18,7 +18,7 @@ class BillingService(
     private val invoiceService: InvoiceService,
     private val invoiceEventsSender: InvoiceEventSender
 ) {
-    fun chargeSubscriptions() {
+    fun chargePendingSubscriptions() {
         invoiceService.fetchPendingInvoices()
             .forEach { chargeSubscriptionFrom(it) }
     }

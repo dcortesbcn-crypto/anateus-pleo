@@ -25,6 +25,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import setupInitialData
 import java.io.File
 import java.sql.Connection
+import java.util.*
+import kotlin.concurrent.timerTask
+
 
 fun main() {
     // The tables to create in the database.
@@ -71,7 +74,21 @@ fun main() {
         invoiceEventsSender = invoiceEventSender
     )
 
-    billingService.chargeSubscriptions()
+    billingService.chargePendingSubscriptions()
+
+
+    val date = Calendar.getInstance()
+    date[Calendar.HOUR] = 6
+    date[Calendar.MINUTE] = 0
+    date[Calendar.SECOND] = 0
+
+    Timer().schedule(
+        timerTask { billingService.chargePendingSubscriptions() },
+        date.time,
+        1000 * 60 * 60 * 24
+    )
+
+
     // Create REST web service
     AntaeusRest(
         invoiceService = invoiceService,
