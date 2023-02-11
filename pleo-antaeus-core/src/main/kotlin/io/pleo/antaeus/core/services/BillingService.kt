@@ -11,7 +11,7 @@ import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.InvoiceStatus.*
 import mu.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger("Billing Service log")
 
 class BillingService(
     private val paymentProvider: PaymentProvider,

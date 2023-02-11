@@ -15,6 +15,7 @@ fun Project.kotlinProject() {
 
         // Logging
         "implementation"("org.slf4j:slf4j-simple:1.7.30")
+        "implementation"("ch.qos.logback:logback-classic:1.4.5")
         "implementation"("io.github.microutils:kotlin-logging:3.0.5")
 
         // Mockk
