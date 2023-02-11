@@ -3,6 +3,7 @@ package io.pleo.antaeus.core.services
 import io.pleo.antaeus.core.events.*
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
+import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.ports.InvoiceEventSender
@@ -46,6 +47,8 @@ class BillingService(
         invoiceEventsSender.send(CurrencyMismatch(invoice.customerId))
     } catch (e: NetworkException) {
         logger.error { "Unable to connect to provider for invoice ${invoice.id}" }
+    } catch (e: Exception) {
+        logger.error { "Unknown exception for ${invoice.id}" }
     }
 
     fun chargeSubscriptions() {
